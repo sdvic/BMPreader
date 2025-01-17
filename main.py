@@ -55,8 +55,6 @@ def read_pressure_raw(bus):
         data = bus.read_i2c_block_data(BMP280_I2C_ADDRESS, REG_PRESSURE_MSB, 3)
         adc_p = (data[0] << 16) | (data[1] << 8) | data[2]  # Combine 3 bytes
         adc_p >>= 4  # Adjust for 20-bit resolution
-        print(f"Raw pressure bytes: {data}")
-        print(f"Full ADC value: {adc_p} ({bin(adc_p)})")
         return adc_p
     except IOError as e:
         print(f"I2C Read Error: {e}")
@@ -74,7 +72,7 @@ def compensate_pressure(adc_p, calib):
 
 # Main function
 if __name__ == '__main__':
-    print('BMP280 Debugging Script with Calibration version 250116S')
+    print('BMP280 Debugging Script with Calibration version 250117B')
     bus = SMBus(1)  # Use I2C bus 1 (Raspberry Pi default)
     try:
         init_bmp280(bus)
@@ -85,7 +83,8 @@ if __name__ == '__main__':
             raw_pressure = read_pressure_raw(bus)
             if raw_pressure is not None:
                 true_pressure = compensate_pressure(raw_pressure, calib)
-                print(f"Raw Pressure: {raw_pressure}, Compensated Pressure: {true_pressure}")
+                lsb_pressure = true_pressure & 0xFFFF  # Extract the least significant 16 bits
+                print(f"True Pressure (LSB): {lsb_pressure}")
             else:
                 print("Failed to read pressure data.")
             time.sleep(1)  # Delay for 1 second between measurements
