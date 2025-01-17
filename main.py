@@ -72,22 +72,26 @@ def compensate_pressure(adc_p, calib):
 
 # Main function
 if __name__ == '__main__':
-    print('BMP280 Debugging Script with Calibration version 250117B')
+    print('BMP280 Debugging Script with Calibration version 250117H')
     bus = SMBus(1)  # Use I2C bus 1 (Raspberry Pi default)
     try:
         init_bmp280(bus)
         calib = read_calibration(bus)
         print("Calibration Coefficients:", calib)
-
+        old_pressure = 999999 # old_pressure is set to a large value for reading on the first loop
         while True:
             raw_pressure = read_pressure_raw(bus)
             if raw_pressure is not None:
                 true_pressure = compensate_pressure(raw_pressure, calib)
                 lsb_pressure = true_pressure & 0xFFFF  # Extract the least significant 16 bits
-                print(f"True Pressure (LSB): {lsb_pressure}")
+                new_pressure = raw_pressure
+                pdiff = new_pressure - old_pressure
+                print(f"{old_pressure}  {pdiff}")
+                old_pressure = new_pressure
             else:
                 print("Failed to read pressure data.")
             time.sleep(1)  # Delay for 1 second between measurements
+            new_pressure = lsb_pressure
     except Exception as e:
         print(f"Error: {e}")
     finally:
