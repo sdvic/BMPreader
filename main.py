@@ -1,7 +1,8 @@
 import time
-from multiprocessing.spawn import old_main_modules
+from datetime import datetime
+
 from smbus2 import SMBus
-version = '250120F'
+version = '250120N'
 # Constants for BMP280
 BMP280_I2C_ADDRESS = 0x76  # Default I2C address of the BMP280
 REG_ID = 0xD0  # Register for chip ID
@@ -54,13 +55,12 @@ if __name__ == '__main__':
             new_pressure = read_pressure_raw(bus)
             pdiff = new_pressure - old_pressure
             if new_pressure is not None:
-                    timestamp = time.strftime('%M:%S')
-                    pressure_readings.append((timestamp, pdiff))
-                    print(f"pdiff at {timestamp}: {pdiff}")
-            else:
-                print("Failed to read pressure data.")
+                pressure_readings.append(pdiff)
+                if pdiff >= 128:
+                    now = datetime.now()
+                    print(f"{pdiff} {now.microsecond}")
             old_pressure = new_pressure
-            time.sleep(1)  # Delay to match your sensor reading frequency
+            time.sleep(.1)  # Delay to match your sensor reading frequency
     except Exception as e:
         print(f"Error: {e}")
     finally:
